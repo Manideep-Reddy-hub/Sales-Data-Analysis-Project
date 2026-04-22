@@ -1,4 +1,5 @@
 import pandas as pd
+import matplotlib.pyplot as plt
 import sys
 def load_data(file_path):
     try:
@@ -40,14 +41,61 @@ def feature_engineering(df):
     df["Delivery_Days"]=(df["Ship-Date"]-df["Order-Date"]).dt.days
     return df
 
+def combine_plot(df):
+    plt.figure(figsize=(14,18))
+    
+    plt.subplot(3,1,1)
+    sale_profit=df.groupby("Sub-Category")[["Sales","Profit"]].sum().sort_values("Sales", ascending=False)
+    sub_category=sale_profit.index.tolist()
+    sales=sale_profit["Sales"].tolist()
+    profit=sale_profit["Profit"].tolist()
+    profit_color=[ 'red' if x<0 else 'orange' for x in profit]
+    x = range(len(sub_category))
+    plt.bar([i - 0.2 for i in x], sales, width=0.4, color='blue')
+    plt.bar([i + 0.2 for i in x], profit, width=0.4, color=profit_color)
+    plt.title("Sales and Profit of Sub-Category")
+    plt.xlabel("Sub-Category")
+    plt.ylabel("Amount")
+    plt.xticks(x, sub_category, rotation=60,ha='right')
+    plt.legend(["Sales", "Profit"])
+    
+    plt.subplot(3,1,2)
+    reason_Profit=df.groupby("Region")[["Sales","Profit"]].sum().sort_values("Sales", ascending=False)
+    region=reason_Profit.index.tolist()
+    sales_region=reason_Profit["Sales"].tolist()
+    profit_region=reason_Profit["Profit"].tolist()
+    x = range(len(region))
+    plt.bar([i - 0.2 for i in x], sales_region, width=0.4, color='green')#sales by region shifted to left by 0.2
+    plt.bar([i + 0.2 for i in x], profit_region, width=0.4, color='yellow') #profit by region shifted to right by 0.2
+    plt.title("Sales and Profit by Region")
+    plt.xlabel("Region")
+    plt.ylabel("Amount")
+    plt.xticks(x, region, rotation=45, ha='right') #ha is horizontal alignment of the x-axis labels
+    plt.legend(["Sales", "Profit"])
+
+    plt.subplot(3,1,3)
+    Ship=df.groupby("Ship-Mode")[ "Delivery_Days"].mean().sort_values()
+    ship_mode=Ship.index.tolist()
+    delivery_days=Ship.tolist()
+    x = range(len(ship_mode))
+    plt.bar(x,delivery_days, color='purple')
+    plt.title("Average Delivery Days by Shipping Mode")
+    plt.xlabel("Shipping Mode")
+    plt.ylabel("Average Delivery Days")
+    plt.xticks(x, ship_mode, rotation=0, ha='right')
+
+    plt.tight_layout()
+    plt.subplots_adjust(hspace=0.8)# Adjust the vertical spacing between subplots
+    plt.show()
 def analysis(df):
     # Now we can do some analysis on the data set
     print("Delivery days average by shipping mode:")
-    Ship=df.groupby("Ship-Mode").agg({"Delivery_Days":"mean"})
+    Ship=df.groupby("Ship-Mode")[ "Delivery_Days"].mean().sort_values()
     print(Ship)
 
     print("Top 5 sub categories by sales:")
-    print(df.groupby("Sub-Category")[["Sales","Profit"]].sum().sort_values("Sales", ascending=False).head(5))
+    rev=df.groupby("Sub-Category")[["Sales","Profit"]].sum().sort_values("Sales", ascending=False)
+    print(rev.head(5))
 
     print("Sales and profits by month:")
     year_profit=df.groupby(["Year", "Month"]).agg({"Sales":"sum","Profit":"sum"})
@@ -59,21 +107,38 @@ def analysis(df):
 
     # Insight: The meaningful data retrieved from analysis of the data set
     print('Insights from the analysis:')
-    print(f"{reason_Profit.idxmax()} Region have  maximum profit, Strong sales and good customer base")
-    print(f"{reason_Profit.idxmin()} Region have  minimum profit, Weak sales and poor customer base")
+    loss_products=rev[rev['Profit']<0].index.tolist()
+    print(f"Loss products are: {loss_products}")#loss products names will be displayed
+    print("These products are causing losses to the company and need to be reviewed")
+    print("Recommendation: The company should decrease the discount for these products")
+
+    print(f"{reason_Profit.idxmax()} Region generating maximum profit")
+    print("This region is performing well and the company should focus on maintaining the sale in market ")
+    print(f"{reason_Profit.idxmin()} Region have  minimum profit")
+    print("This region is under performing and the company should focus on improving sales")
+
 
     peak_year, peak_month = year_profit["Sales"].idxmax()
     print(f"Maximum sales happened in Year {peak_year}, Month {peak_month}")
 
     print(f"{Ship.idxmin()} is the fastest shipping mode")
+    print("This is the most efficient shipping mode and the company should consider using it more for best customer satisfaction")
     print(f"{Ship.idxmax()} is the slowest shipping mode")
+    print("This is the slowest shipping mode and the company need to improve the logistics")
 
+def conclusion():
+    print("\nFinal Business Conclusion:")
+    print("1. Focus on high-performing regions to maximize revenue.")
+    print("2. Review pricing strategy for loss-making products.")
+    print("3. Improve slow shipping modes to enhance customer satisfaction.")
+    print("4. Leverage seasonal trends to plan inventory and marketing.")
 def main():
     if len(sys.argv)<2:
         print("Please provide the file path as an argument")
         sys.exit(1)
     file_path=sys.argv[1]
     data=load_data(file_path)
+    print("The columns in the data set are:",data.columns.tolist())
     basic_info(data)
     data=handling_data(data)
     data=convert_data_types(data)
@@ -84,4 +149,7 @@ def main():
     data=feature_engineering(data)
     # Now we can do some analysis on the data set
     analysis(data)
+    combine_plot(data)
+    conclusion()
+    
 if __name__=="__main__":    main()
