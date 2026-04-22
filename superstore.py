@@ -128,6 +128,12 @@ def analysis(df):
     print(f"{Ship.idxmax()} is the slowest shipping mode")
     print("This is the slowest shipping mode and the company need to improve the logistics")
 
+    print(f"{region_margin.idxmax()} region has the highest profit margin")
+    print("This region is most efficient in converting sales into profit.\n")
+
+    print(f"{region_margin.idxmin()} region has the lowest profit margin")
+    print("This region has cost or pricing inefficiencies.\n")
+
 def conclusion():
     print("\nFinal Business Conclusion:")
     print("1. Focus on high-performing regions to maximize revenue.")
