@@ -105,17 +105,19 @@ def analysis(df):
     reason_Profit=df.groupby("Region")["Profit"].sum().sort_values(ascending=False)
     print(reason_Profit)
 
+    region_margin = (reason_Profit / df.groupby("Region")["Sales"].sum()).sort_values(ascending=False)
+    print("Region wise profit margin:")
+    print(region_margin)
     # Insight: The meaningful data retrieved from analysis of the data set
     print('Insights from the analysis:')
     loss_products=rev[rev['Profit']<0].index.tolist()
     print(f"Loss products are: {loss_products}")#loss products names will be displayed
-    print("These products are causing losses to the company and need to be reviewed")
-    print("Recommendation: The company should decrease the discount for these products")
+    print("Pricing or discount issue detected.\n")
 
-    print(f"{reason_Profit.idxmax()} Region generating maximum profit")
-    print("This region is performing well and the company should focus on maintaining the sale in market ")
-    print(f"{reason_Profit.idxmin()} Region have  minimum profit")
-    print("This region is under performing and the company should focus on improving sales")
+    print(f"{reason_Profit.idxmax()} Region generates the highest profit")
+    print("Strong market, focus investment here.\n")
+    print(f"{reason_Profit.idxmin()} Region generates the  lowest profit")
+    print("Weak market, consider strategies to improve performance.\n")
 
 
     peak_year, peak_month = year_profit["Sales"].idxmax()
@@ -138,6 +140,7 @@ def main():
         sys.exit(1)
     file_path=sys.argv[1]
     data=load_data(file_path)
+    print("Analyzing Superstore sales data to identify profitability and operational insights...\n")
     print("The columns in the data set are:",data.columns.tolist())
     basic_info(data)
     data=handling_data(data)
